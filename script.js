@@ -1,36 +1,35 @@
-async function sendMessage() {
-    const userInput = document.getElementById("user-input").value;
+const apiKey = "AIzaSyAxjdiv-dbGQj2Js8rDt8ZKTc2vdPaCTC0"; // 🔥 Replace with your Gemini API key
+
+async function chatWithGemini(userInput) {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: userInput }] }]
+        })
+    });
+
+    const data = await response.json();
+    console.log("Gemini API Response:", data);
+
+    if (data.candidates && data.candidates.length > 0) {
+        return data.candidates[0].content.parts[0].text; // Extract chatbot response
+    } else {
+        return "⚠️ No response from Gemini API.";
+    }
+}
+
+function sendMessage() {
+    const userInput = document.getElementById("userInput").value;
     if (!userInput) return;
 
-    const chatBox = document.getElementById("chat-box");
-    chatBox.innerHTML += `<p class="user-message">${userInput}</p>`;
+    // Display user message
+    const chatbox = document.getElementById("chatbox");
+    chatbox.innerHTML += `<p class="message user">You: ${userInput}</p>`;
 
-    try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer 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`
-            },
-            body: JSON.stringify({
-                model: "gpt-3.5-turbo",
-                messages: [{ role: "user", content: userInput }]
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const botMessage = data.choices[0]?.message?.content || "No response from AI.";
-
-        chatBox.innerHTML += `<p class="bot-message">${botMessage}</p>`;
-    } catch (error) {
-        console.error("Chatbot Error:", error);
-        chatBox.innerHTML += `<p class="bot-message">Error: ${error.message}</p>`;
-    }
-
-    document.getElementById("user-input").value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
+    // Get Gemini API response
+    chatWithGemini(userInput).then(response => {
+        chatbox.innerHTML += `<p class="message bot">Gemini: ${response}</p>`;
+        document.getElementById("userInput").value = ""; // Clear input
+    });
 }
