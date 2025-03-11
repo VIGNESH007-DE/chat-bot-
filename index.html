@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agriculture Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4; }
+        #chat-container { max-width: 400px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        #chat-box { height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background: #fff; text-align: left; }
+        .user-message { color: blue; font-weight: bold; }
+        .bot-message { color: green; font-weight: bold; }
+        input, button { padding: 10px; margin: 5px; width: 90%; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <h2>AI Agriculture Chatbot</h2>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Ask about farming methods...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const API_KEY = "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"; // 🔴 Replace this with your actual OpenAI API key
+
+        async function sendMessage() {
+            let userInput = document.getElementById("user-input").value.trim();
+            if (userInput === "") return;
+
+            let chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<p class="user-message">You: ${userInput}</p>`;
+
+            try {
+                let response = await fetch("https://api.openai.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "gpt-3.5-turbo",
+                        messages: [
+                            { role: "system", content: "You are an expert in agriculture. Provide detailed answers on farming techniques, organic farming, irrigation, and soil health." },
+                            { role: "user", content: userInput }
+                        ],
+                        max_tokens: 100
+                    })
+                });
+
+                let data = await response.json();
+
+                if (data.error) {
+                    console.error("OpenAI API Error:", data.error);
+                    chatBox.innerHTML += `<p class="bot-message">Bot: Error - ${data.error.message}</p>`;
+                    return;
+                }
+
+                let botReply = data.choices[0].message.content;
+                chatBox.innerHTML += `<p class="bot-message">Bot: ${botReply}</p>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (error) {
+                console.error("Network/API Error:", error);
+                chatBox.innerHTML += `<p class="bot-message">Bot: Unable to fetch response. Check API key and network.</p>`;
+            }
+
+            document.getElementById("user-input").value = "";
+        }
+    </script>
+</body>
+</html>
