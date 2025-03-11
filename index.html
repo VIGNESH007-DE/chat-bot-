@@ -1,101 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Farm Matrix</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 20px;
-        }
-        #results {
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Farm Matrix</h1>
-    <input type="text" id="plantName" placeholder="Enter plant name">
-    <button onclick="getPlantInfo()">Get Farming Process</button>
-    <div id="results"></div>
 
-    <script>
-        function getPlantInfo() {
-            const plantName = document.getElementById('plantName').value;
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = "Loading...";
+    <div class="chat-container">
+        <div id="chat-box">
+            <p class="bot-message">Hello! Ask me anything about plants 🌱</p>
+        </div>
+        <input type="text" id="user-input" placeholder="Type a message..." autocomplete="off">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 
-            // Replace with your API endpoint and key, or use a backend to hide the key.
-            // Using trefle api as example, you will need to get a key from their website.
-            const apiKey = "4kzRJTkzvfCq1PFV9M73QwZ-8tUyt7lnU6YhfB2qTgU";
-            const apiUrl = `https://trefle.io/api/v1/plants/search?token=${apiKey}&q=${plantName}`;
-
-            fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    let output = "";
-                    if (data.data && data.data.length > 0) {
-                        const plant = data.data[0]; // Get the first result
-                         const plantUrl = `https://trefle.io/api/v1/plants/${plant.id}?token=${apiKey}`;
-                         fetch(plantUrl).then(response2 => {
-                            if(!response2.ok){
-                                throw new Error(`HTTP error! status: ${response2.status}`);
-                            }
-                            return response2.json();
-                         }).then(plantData => {
-                            if(plantData.data){
-                                const plantDetails = plantData.data;
-                                if(plantDetails.growth){
-                                    if(plantDetails.growth.description){
-                                        output += "<h2>Growth Description:</h2><p>" + plantDetails.growth.description + "</p>";
-                                    }
-                                    if(plantDetails.growth.minimum_precipitation){
-                                        output += "<h2>Minimum Precipitation:</h2><p>" + plantDetails.growth.minimum_precipitation.inches + " inches</p>";
-                                    }
-                                    if(plantDetails.growth.maximum_precipitation){
-                                        output += "<h2>Maximum Precipitation:</h2><p>" + plantDetails.growth.maximum_precipitation.inches + " inches</p>";
-                                    }
-                                    if(plantDetails.growth.minimum_temperature.deg_f){
-                                        output += "<h2>Minimum Temperature:</h2><p>" + plantDetails.growth.minimum_temperature.deg_f + " Fahrenheit</p>";
-                                    }
-                                    if(plantDetails.growth.maximum_temperature.deg_f){
-                                        output += "<h2>Maximum Temperature:</h2><p>" + plantDetails.growth.maximum_temperature.deg_f + " Fahrenheit</p>";
-                                    }
-                                    if(plantDetails.growth.soil_nutriments){
-                                        output += "<h2>Soil Nutriments:</h2><p>" + plantDetails.growth.soil_nutriments + "</p>";
-                                    }
-                                    if(plantDetails.growth.soil_ph_minimum){
-                                        output += "<h2>Minimum Soil pH:</h2><p>" + plantDetails.growth.soil_ph_minimum + "</p>";
-                                    }
-                                    if(plantDetails.growth.soil_ph_maximum){
-                                        output += "<h2>Maximum Soil pH:</h2><p>" + plantDetails.growth.soil_ph_maximum + "</p>";
-                                    }
-
-                                }
-                                resultsDiv.innerHTML = output;
-
-                            } else {
-                                resultsDiv.innerHTML = "<p>Plant details not found.</p>";
-                            }
-
-                         }).catch(error2 => {
-                            resultsDiv.innerHTML = `<p>Error fetching plant details: ${error2.message}</p>`;
-                         });
-
-                    } else {
-                        resultsDiv.innerHTML = "<p>Plant not found.</p>";
-                    }
-                })
-                .catch(error => {
-                    resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
-                });
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
