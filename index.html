@@ -1,72 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Agriculture Chatbot</title>
+    <title>Farm Matrix</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f4; }
-        #chat-container { max-width: 400px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        #chat-box { height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background: #fff; text-align: left; }
-        .user-message { color: blue; font-weight: bold; }
-        .bot-message { color: green; font-weight: bold; }
-        input, button { padding: 10px; margin: 5px; width: 90%; }
-        button { background: #28a745; color: white; border: none; cursor: pointer; }
-        button:hover { background: #218838; }
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        #results {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
-    <h2>AI Agriculture Chatbot</h2>
-    <div id="chat-container">
-        <div id="chat-box"></div>
-        <input type="text" id="user-input" placeholder="Ask about farming methods...">
-        <button onclick="sendMessage()">Send</button>
-    </div>
+    <h1>Farm Matrix</h1>
+    <input type="text" id="plantName" placeholder="Enter plant name">
+    <button onclick="getPlantInfo()">Get Farming Process</button>
+    <div id="results"></div>
 
     <script>
-        const API_KEY = "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"; // 🔴 Replace this with your actual OpenAI API key
+        function getPlantInfo() {
+            const plantName = document.getElementById('plantName').value;
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = "Loading...";
 
-        async function sendMessage() {
-            let userInput = document.getElementById("user-input").value.trim();
-            if (userInput === "") return;
+            // Replace with your API endpoint and key, or use a backend to hide the key.
+            // Using trefle api as example, you will need to get a key from their website.
+            const apiKey = "4kzRJTkzvfCq1PFV9M73QwZ-8tUyt7lnU6YhfB2qTgU";
+            const apiUrl = `https://trefle.io/api/v1/plants/search?token=${apiKey}&q=${plantName}`;
 
-            let chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML += `<p class="user-message">You: ${userInput}</p>`;
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    let output = "";
+                    if (data.data && data.data.length > 0) {
+                        const plant = data.data[0]; // Get the first result
+                         const plantUrl = `https://trefle.io/api/v1/plants/${plant.id}?token=${apiKey}`;
+                         fetch(plantUrl).then(response2 => {
+                            if(!response2.ok){
+                                throw new Error(`HTTP error! status: ${response2.status}`);
+                            }
+                            return response2.json();
+                         }).then(plantData => {
+                            if(plantData.data){
+                                const plantDetails = plantData.data;
+                                if(plantDetails.growth){
+                                    if(plantDetails.growth.description){
+                                        output += "<h2>Growth Description:</h2><p>" + plantDetails.growth.description + "</p>";
+                                    }
+                                    if(plantDetails.growth.minimum_precipitation){
+                                        output += "<h2>Minimum Precipitation:</h2><p>" + plantDetails.growth.minimum_precipitation.inches + " inches</p>";
+                                    }
+                                    if(plantDetails.growth.maximum_precipitation){
+                                        output += "<h2>Maximum Precipitation:</h2><p>" + plantDetails.growth.maximum_precipitation.inches + " inches</p>";
+                                    }
+                                    if(plantDetails.growth.minimum_temperature.deg_f){
+                                        output += "<h2>Minimum Temperature:</h2><p>" + plantDetails.growth.minimum_temperature.deg_f + " Fahrenheit</p>";
+                                    }
+                                    if(plantDetails.growth.maximum_temperature.deg_f){
+                                        output += "<h2>Maximum Temperature:</h2><p>" + plantDetails.growth.maximum_temperature.deg_f + " Fahrenheit</p>";
+                                    }
+                                    if(plantDetails.growth.soil_nutriments){
+                                        output += "<h2>Soil Nutriments:</h2><p>" + plantDetails.growth.soil_nutriments + "</p>";
+                                    }
+                                    if(plantDetails.growth.soil_ph_minimum){
+                                        output += "<h2>Minimum Soil pH:</h2><p>" + plantDetails.growth.soil_ph_minimum + "</p>";
+                                    }
+                                    if(plantDetails.growth.soil_ph_maximum){
+                                        output += "<h2>Maximum Soil pH:</h2><p>" + plantDetails.growth.soil_ph_maximum + "</p>";
+                                    }
 
-            try {
-                let response = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
-                        messages: [
-                            { role: "system", content: "You are an expert in agriculture. Provide detailed answers on farming techniques, organic farming, irrigation, and soil health." },
-                            { role: "user", content: userInput }
-                        ],
-                        max_tokens: 100
-                    })
+                                }
+                                resultsDiv.innerHTML = output;
+
+                            } else {
+                                resultsDiv.innerHTML = "<p>Plant details not found.</p>";
+                            }
+
+                         }).catch(error2 => {
+                            resultsDiv.innerHTML = `<p>Error fetching plant details: ${error2.message}</p>`;
+                         });
+
+                    } else {
+                        resultsDiv.innerHTML = "<p>Plant not found.</p>";
+                    }
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML = `<p>Error: ${error.message}</p>`;
                 });
-
-                let data = await response.json();
-
-                if (data.error) {
-                    console.error("OpenAI API Error:", data.error);
-                    chatBox.innerHTML += `<p class="bot-message">Bot: Error - ${data.error.message}</p>`;
-                    return;
-                }
-
-                let botReply = data.choices[0].message.content;
-                chatBox.innerHTML += `<p class="bot-message">Bot: ${botReply}</p>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } catch (error) {
-                console.error("Network/API Error:", error);
-                chatBox.innerHTML += `<p class="bot-message">Bot: Unable to fetch response. Check API key and network.</p>`;
-            }
-
-            document.getElementById("user-input").value = "";
         }
     </script>
 </body>
